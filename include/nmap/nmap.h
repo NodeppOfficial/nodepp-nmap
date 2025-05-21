@@ -40,7 +40,7 @@ namespace nodepp { namespace nmap { namespace port {
 namespace nodepp { namespace nmap { namespace addr {
 
     addr_t scan( const nmap_addr_t args ){ 
-    addr_t pid  ( args ); pid.pipe(); return pid;
+    addr_t pid ( args ); pid.pipe(); return pid;
     }
     
     array_t<string_t> await( const nmap_addr_t args ){

@@ -86,7 +86,7 @@ public: port_t () noexcept : obj( new nmap_port_t() ){}
             while( process::millis() < timeout ){
                 for( auto &x: list ){ int c = 0;
                 if ( (c=x._connect()) < 0 ){ continue; }
-                     self->onPort.emit(x.get_sockport());
+                     self->onPort.emit( x.get_sockport() );
                      x.free();
                 }    coNext;
             }
@@ -101,6 +101,8 @@ public: port_t () noexcept : obj( new nmap_port_t() ){}
         });
 
     }
+
+    void scan() const noexcept { pipe(); }
 
 };}}
 

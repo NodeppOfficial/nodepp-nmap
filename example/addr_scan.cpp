@@ -10,8 +10,8 @@ using namespace nodepp;
 void onMain(){ 
 
     nmap_addr_t args; 
-    args.from    = { 192, 168, 1, 1   };
-    args.to      = { 192, 168, 1, 255 };
+    args.from    = ptr_t<uchar>({ 127, 0, 0, 0   });
+    args.to      = ptr_t<uchar>({ 127, 0, 0, 255 });
     args.IPPROTO = IPPROTO_TCP;
     args.maxconn = 1000;
     args.port    = 53;

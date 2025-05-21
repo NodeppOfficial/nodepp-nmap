@@ -50,10 +50,8 @@ private:
     }
 
     void next_host( const array_t<uchar>& host ) const noexcept {
-         for( ulong x=host.size(); x--; ){
-              host[x] ++ ;
-         if ( host[x] == 0 ){ continue; } break;
-         }
+        for( ulong x=host.size(); x--; ){ host[x] ++ ;
+        if ( host[x] == 0 ){ continue; } break; }
     }
 
 public: addr_t () noexcept : obj( new nmap_addr_t() ){}
@@ -83,14 +81,12 @@ public: addr_t () noexcept : obj( new nmap_addr_t() ){}
         obj->state = -1; onClose.emit();
     }
 
-    void pipe() const {
+    void pipe() const noexcept {
         ptr_t<socket_t> list( obj->maxconn );
         array_t<uchar>  host( get_host() );
         auto self = type::bind( this );
 
-        if( obj->from.size() != obj->to.size() ){
-            process::error("Invalid host size");
-        }
+        if( obj->from.size()!=obj->to.size() ){ return; }
 
         process::add([=](){ static ulong timeout = 0;
             if( self->is_closed() ){ self->unpipe(); return -1; }
@@ -103,7 +99,7 @@ public: addr_t () noexcept : obj( new nmap_addr_t() ){}
                  x.IPPROTO = self->obj->IPPROTO;
                              self->next_host( host );
                  self->onData.emit( host.join(".") );
-                 x.socket( host.join("."), self->obj->port );
+                 x.socket( dns::lookup(host.join(".")), self->obj->port );
             }
 
             coNext;
@@ -111,7 +107,7 @@ public: addr_t () noexcept : obj( new nmap_addr_t() ){}
             timeout = process::millis() + self->obj->timeout;
             while( process::millis() < timeout ){
                 for( auto &x: list ){ int c = 0;
-                if ( (c=x._connect()) < 0 ){ continue; }
+                if ( (c=x._connect())<0 ){ continue; }
                      self->onAddress.emit(x.get_peername());
                      x.free();
                 }    coNext;
@@ -128,6 +124,8 @@ public: addr_t () noexcept : obj( new nmap_addr_t() ){}
         });
 
     }
+
+    void scan() const noexcept { pipe(); }
 
 };}}
 

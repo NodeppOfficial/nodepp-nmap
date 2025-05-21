@@ -14,10 +14,17 @@ void onMain(){
     args.to      = ptr_t<uchar>({ 127, 0, 0, 255 });
     args.IPPROTO = IPPROTO_TCP;
     args.maxconn = 1000;
-    args.port    = 53;
+    args.port    = 8000;
 
-    for( auto x: nmap::addr::await( args ) )
-         console::log( "->", x );
+    auto scanner = nmap::addr::scan( args );
+
+    scanner.onClose([=](){
+        console::log( "scanner closed" );
+    });
+
+    scanner.onAddress([=]( string_t addr ){
+        console::log( "->", addr );
+    });
 
 }
 
