@@ -22,8 +22,8 @@ namespace nodepp { struct nmap_port_t {
     string_t host = "localhost";
     uint IPPROTO  = IPPROTO_TCP;
     uint maxport  = 9999;
+    uint maxconn  = 1024;
     uint minport  = 0;
-    uint maxconn  = 1000;
     uint timeout  = 3000;
     int  state    = 0;
 };}
@@ -63,13 +63,14 @@ public: port_t () noexcept : obj( new nmap_port_t() ){}
     }
 
     void pipe() const noexcept { 
+        ptr_t<ulong>   timeout( new ulong(0) );
         auto port = type::bind( obj->minport );
         ptr_t<socket_t>   list( obj->maxconn );
         auto self = type::bind( this );
 
-        process::add([=](){ static ulong timeout = 0;
+        process::poll::add( coroutine::add( COROUTINE(){
             if( self->is_closed() ){ self->unpipe(); return -1; }
-        coStart
+        coBegin
 
             for( auto &x: list ){ *port += 1;
             if ( *port >= self->obj->maxport ){ break; }
@@ -82,8 +83,8 @@ public: port_t () noexcept : obj( new nmap_port_t() ){}
 
             coNext;
 
-            timeout = process::millis() + self->obj->timeout;
-            while( process::millis() < timeout ){
+           *timeout = process::millis() + self->obj->timeout;
+            while( process::millis() < *timeout ){
                 for( auto &x: list ){ int c = 0;
                 if ( (c=x._connect()) < 0 ){ continue; }
                      self->onPort.emit( x.get_sockport() );
@@ -96,9 +97,8 @@ public: port_t () noexcept : obj( new nmap_port_t() ){}
             if ( *port >= self->obj->maxport ){ self->unpipe(); coEnd; }
             for( auto &x: list ){ x.free(); }
 
-        coGoto(0);            
-        coStop
-        });
+        coGoto(0) ; coFinish
+        }));
 
     }
 

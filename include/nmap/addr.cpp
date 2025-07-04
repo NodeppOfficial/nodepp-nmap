@@ -22,7 +22,7 @@ namespace nodepp { struct nmap_addr_t {
     ptr_t<uchar> from; // ({ 192, 168, 0, 0 })
     ptr_t<uchar> to;   // ({ 192, 168, x, x })
     uint IPPROTO  = IPPROTO_TCP;
-    uint maxconn  = 1000;
+    uint maxconn  = 1024;
     uint timeout  = 3000;
     uint port     = 53;
     int  state    = 0;
@@ -82,15 +82,16 @@ public: addr_t () noexcept : obj( new nmap_addr_t() ){}
     }
 
     void pipe() const noexcept {
-        ptr_t<socket_t> list( obj->maxconn );
-        array_t<uchar>  host( get_host() );
+        ptr_t<ulong>   timeout( new ulong(0) );
+        ptr_t<socket_t>   list( obj->maxconn );
+        array_t<uchar>    host( get_host() );
         auto self = type::bind( this );
 
         if( obj->from.size()!=obj->to.size() ){ return; }
 
-        process::add([=](){ static ulong timeout = 0;
+        process::poll::add( coroutine::add( COROUTINE(){
             if( self->is_closed() ){ self->unpipe(); return -1; }
-        coStart
+        coBegin
 
             for( auto &x: list ){
             if ( self->compare( host ) ){ break; }
@@ -104,8 +105,8 @@ public: addr_t () noexcept : obj( new nmap_addr_t() ){}
 
             coNext;
 
-            timeout = process::millis() + self->obj->timeout;
-            while( process::millis() < timeout ){
+           *timeout = process::millis() + self->obj->timeout;
+            while( process::millis() < *timeout ){
                 for( auto &x: list ){ int c = 0;
                 if ( (c=x._connect())<0 ){ continue; }
                      self->onAddress.emit(x.get_peername());
@@ -119,9 +120,8 @@ public: addr_t () noexcept : obj( new nmap_addr_t() ){}
                { self->unpipe(); coEnd; } 
             for( auto &x: list ){ x.free(); }
 
-        coGoto(0);            
-        coStop
-        });
+        coGoto(0) ; coFinish
+        }));
 
     }
 
