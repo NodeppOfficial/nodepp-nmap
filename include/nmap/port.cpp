@@ -68,7 +68,7 @@ public: port_t () noexcept : obj( new nmap_port_t() ){}
         ptr_t<socket_t>   list( obj->maxconn );
         auto self = type::bind( this );
 
-        process::poll::add( coroutine::add( COROUTINE(){
+        process::add( coroutine::add( COROUTINE(){
             if( self->is_closed() ){ self->unpipe(); return -1; }
         coBegin
 

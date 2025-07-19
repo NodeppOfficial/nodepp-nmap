@@ -89,7 +89,7 @@ public: addr_t () noexcept : obj( new nmap_addr_t() ){}
 
         if( obj->from.size()!=obj->to.size() ){ return; }
 
-        process::poll::add( coroutine::add( COROUTINE(){
+        process::add( coroutine::add( COROUTINE(){
             if( self->is_closed() ){ self->unpipe(); return -1; }
         coBegin
 
